@@ -1,0 +1,15 @@
+services:
+  paper-trader:
+    build: .
+    container_name: paper-trader
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Australia/Sydney
+      # Set to enable API key auth (leave empty to disable)
+      # - PAPER_TRADER_API_KEY=your-secret-key-here
+      # Restrict CORS origins (comma-separated)
+      # - CORS_ORIGINS=https://trader.yourdomain.com

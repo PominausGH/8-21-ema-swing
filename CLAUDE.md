@@ -4,44 +4,69 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Single-file Python script (`8-21.py`) that scans ASX200 stocks for swing trading buy signals using the "8-21 EMA Power Triangle" strategy:
+Paper trading simulator for ASX200 stocks using the "8-21 EMA Power Triangle" swing trading strategy:
 - **8 & 21 EMA** — trend identification and pullback zones
-- **DeMarker oscillator (14-period)** — timing pullback entries (oversold bounce: crosses above 0.35 from below 0.30)
-- **Fibonacci extensions (127.2%, 161.8%)** — profit targets from recent swing low/high range
-
-Buy signal fires when: price > 21 EMA, 8 EMA > 21 EMA, previous close ≤ 8 EMA, latest close > 8 EMA, and DeMarker bounces. Stop loss is below 21 EMA.
+- **DeMarker oscillator (14-period)** — timing entries (oversold bounce: crosses above 0.35 from below 0.30)
+- **Fibonacci extensions (127.2%, 161.8%)** — profit targets from swing low/high
+- **Auto-execution**: scanner detects signals, auto-opens positions with 2% risk sizing
+- **Scale-out**: 25% at Target 1 (127.2%), remaining 75% at Target 2 (161.8%)
 
 ## Running
 
 ```bash
-pip install yfinance pandas numpy
-python3 8-21.py
+# Local development
+pip install -r requirements.txt
+python run.py                    # http://localhost:8000
+
+# Docker (production)
+docker compose up -d --build     # http://localhost:8000
 ```
-
-No tests, linting, or build system configured.
-
-## Known Issues
-
-- **Syntax error on line 42**: `il oc` should be `iloc` (space in method name)
-- **Incomplete symbol list**: Only ~35 real ASX symbols; rest are placeholder `' PME.AX'` entries with leading spaces
-- **Email alerting (`send_email`)**: Fully commented out / stub
-- **No error handling**: Network failures or bad yfinance data will crash the script
-- **No scheduling**: Must be run manually (intended for cron)
 
 ## Architecture
 
-All logic is in `8-21.py`. Key functions:
+```
+app/
+├── main.py          # FastAPI app, lifespan, routes, static files
+├── config.py        # Constants (starting cash, commission, risk %, paths)
+├── database.py      # SQLite init, 6 tables, get_db()
+├── scanner.py       # Signal detection (refactored from 8-21.py)
+├── trader.py        # Position sizing, buy/sell execution, stop/target monitoring
+├── portfolio.py     # Portfolio summary, trade journal, stats, equity curve
+├── price_cache.py   # In-memory price cache (5min TTL) for yfinance data
+├── models.py        # Pydantic request schemas
+├── tasks.py         # Background async loop: scan → trade → monitor → snapshot
+└── routes/          # FastAPI routers (portfolio, positions, trades, scanner, settings)
+frontend/
+└── index.html       # Vue 3 + TailwindCSS + Chart.js SPA (all CDN, no build step)
+symbols.txt          # ASX200 symbols, one per line
+8-21.py              # Original standalone scanner (kept as reference)
+```
 
-| Function | Purpose |
-|---|---|
-| `calculate_ema(series, period)` | EMA via pandas `ewm` |
-| `calculate_demarker(high, low, period)` | DeMarker oscillator from high/low series |
-| `find_swing_low_high(close, lookback)` | Rolling min/max over lookback window |
-| `check_signal(symbol)` | Downloads 3mo daily data, checks all conditions, returns signal string or None |
-| `send_email(message)` | Stub for SMTP email alerts |
+## Key Files
 
-The `__main__` block iterates all symbols, collects signals, and prints results.
+- `symbols.txt` — ASX200 symbol list (175 equities, `.AX` suffix). Update quarterly after ASX rebalances.
+- `data/paper_trading.db` — SQLite database (gitignored, created at runtime)
+- `docker-compose.yml` — Production deployment config
+
+## Database Tables
+
+`portfolio` (single row), `positions`, `trades`, `scanner_results`, `equity_snapshots`, `settings`
+
+## API Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/portfolio` | Portfolio summary |
+| GET/POST | `/api/positions` | List open / manual buy |
+| POST | `/api/positions/{id}/close` | Close position |
+| GET | `/api/trades` | Trade journal |
+| GET | `/api/scanner/results` | Scanner history |
+| POST | `/api/scanner/run` | Trigger manual scan |
+| GET | `/api/stats` | Cumulative stats |
+| GET | `/api/equity-curve` | Equity snapshots |
+| GET/PUT | `/api/settings` | Config |
+| POST | `/api/reset` | Reset to $150k |
 
 ## Data Source
 
-Uses `yfinance` to download OHLC data. ASX symbols use `.AX` suffix. Data period is 3 months daily.
+Uses `yfinance` for OHLC data. Rate limited (0.3s between downloads). Price cache in `price_cache.py` avoids re-fetching within 5 minutes.

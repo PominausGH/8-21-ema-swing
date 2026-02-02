@@ -1,27 +1,20 @@
+import os
 import yfinance as yf
 import pandas as pd
-import numpy as np
-import datetime
 import smtplib
 from email.mime.text import MIMEText
 
-# Hardcoded list of ASX200 symbols (add .AX for yfinance). Update as needed from ASX sources.
-asx200_symbols = [
-    'BHP.AX', 'CBA.AX', 'CSL.AX', 'RIO.AX', 'NAB.AX', 'WBC.AX', 'ANZ.AX', 'MQG.AX', 'WES.AX', 'GMG.AX',
-    'WDS.AX', 'FMG.AX', 'TLS.AX', 'ALL.AX', 'REA.AX', 'WOW.AX', 'TCL.AX', 'QBE.AX', 'STO.AX', 'COL.AX',
-    'SYD.AX', 'XRO.AX', 'COH.AX', 'S32.AX', 'RMD.AX', 'BXB.AX', 'JHX.AX', 'NCM.AX', 'SUN.AX', 'ORG.AX',
-    'IAG.AX', 'FPH.AX', 'AMC.AX', 'CPU.AX', 'SHL.AX', ' PME.AX', 'NST.AX', 'SCG.AX', 'TLX.AX', ' PME.AX',
-    'TPG.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX', ' PME.AX',
-    # ... (abbreviated for brevity; add the full ~200 from ASX CSV or sites like marketindex.com.au/asx200)
-    # Example continuation: 'AMP.AX', 'A2M.AX', 'ALQ.AX', 'ALU.AX', 'ALX.AX', 'APA.AX', 'APX.AX', 'AST.AX', 'ASX.AX', 'AWC.AX',
-    # 'BEN.AX', 'BKW.AX', 'BLD.AX', 'CAR.AX', 'CDA.AX', 'CEN.AX', 'CGF.AX', 'CHC.AX', 'CQE.AX', 'CWN.AX',
-    # ' DMP.AX', 'DOW.AX', 'EDV.AX', 'FLT.AX', 'GMG.AX', 'GPT.AX', 'HVN.AX', 'ILU.AX', 'IOO.AX', 'IPH.AX',
-    # 'JBH.AX', 'LLC.AX', 'LTR.AX', 'LYC.AX', 'MGX.AX', 'MIN.AX', 'MPL.AX', 'MP1.AX', 'MTS.AX', 'NHF.AX',
-    # 'NIC.AX', 'NVX.AX', ' NXT.AX', 'ORA.AX', 'ORI.AX', 'OSH.AX', 'PBH.AX', 'PDL.AX', 'PLS.AX', 'PMV.AX',
-    # 'QAN.AX', 'QUB.AX', 'RBD.AX', 'RWC.AX', 'SDF.AX', 'SEK.AX', 'SFR.AX', 'SGP.AX', 'SLK.AX', 'SOL.AX',
-    # 'SQ2.AX', 'SVW.AX', 'TAH.AX', 'TNE.AX', 'TPW.AX', 'TYR.AX', 'VUK.AX', 'WHC.AX', 'WOR.AX', 'ZIP.AX',
-    # Complete the list to 200 for full scan. For now, this is a sample to demonstrate.
-]  # Full list ~200; replace with your own or fetch dynamically.
+def load_symbols(filepath='symbols.txt'):
+    """Load symbols from a text file (one per line, # comments ignored)."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, filepath)
+    symbols = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                symbols.append(line)
+    return symbols
 
 def calculate_ema(series, period):
     return series.ewm(span=period, adjust=False).mean()
@@ -95,7 +88,7 @@ def send_email(message):
 
 if __name__ == "__main__":
     signals = []
-    for symbol in asx200_symbols:
+    for symbol in load_symbols():
         signal = check_signal(symbol)
         if signal:
             signals.append(signal)
