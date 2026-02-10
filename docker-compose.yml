@@ -4,12 +4,23 @@ services:
     container_name: paper-trader
     restart: unless-stopped
     ports:
-      - "8000:8000"
+    - 127.0.0.1:8002:8000
     volumes:
-      - ./data:/app/data
+    - ./data:/app/data
     environment:
-      - TZ=Australia/Sydney
-      # Set to enable API key auth (leave empty to disable)
-      # - PAPER_TRADER_API_KEY=your-secret-key-here
-      # Restrict CORS origins (comma-separated)
-      # - CORS_ORIGINS=https://trader.yourdomain.com
+    - TZ=Australia/Sydney
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          pids: 200
+    cap_add:
+    - CHOWN
+    - DAC_OVERRIDE
+    - FOWNER
+    - SETGID
+    - SETUID

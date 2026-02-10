@@ -1,9 +1,22 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.database import get_db, init_db
 from app.models import SettingUpdate
 from app.config import STARTING_CASH
 
 router = APIRouter()
+
+ALLOWED_SETTING_KEYS = {
+    "auto_trade",
+    "scan_interval_minutes",
+    "risk_pct",
+    "commission",
+    "max_positions",
+    "min_signal_score",
+    "max_drawdown_pct",
+    "daily_loss_limit_pct",
+    "slippage_pct",
+    "trailing_stop_enabled",
+}
 
 
 @router.get("/settings")
@@ -18,6 +31,8 @@ def get_settings():
 
 @router.put("/settings")
 def update_setting(req: SettingUpdate):
+    if req.key not in ALLOWED_SETTING_KEYS:
+        raise HTTPException(status_code=400, detail=f"Invalid setting key: {req.key}")
     db = get_db()
     try:
         db.execute(

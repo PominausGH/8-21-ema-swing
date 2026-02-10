@@ -51,7 +51,7 @@ app.add_middleware(
 async def auth_middleware(request: Request, call_next):
     """Simple API key auth for /api routes. Skipped if PAPER_TRADER_API_KEY is not set."""
     if API_KEY and request.url.path.startswith("/api"):
-        key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
+        key = request.headers.get("X-API-Key")
         if key != API_KEY:
             raise HTTPException(status_code=401, detail="Invalid API key")
     return await call_next(request)

@@ -2,8 +2,19 @@ import sqlite3
 import os
 from app.config import DB_PATH, STARTING_CASH
 
+ALLOWED_TABLES = {'positions', 'settings', 'portfolio_history', 'scanner_results'}
+ALLOWED_COLUMN_PATTERN = r'^[a-z_][a-z0-9_]*$'
+
 def _safe_add_columns(db: sqlite3.Connection, table: str, columns: list[tuple[str, str]]):
     """Add columns to a table if they don't already exist."""
+    import re
+    if table not in ALLOWED_TABLES:
+        raise ValueError(f"Invalid table name: {table}")
+    for col_name, col_type in columns:
+        if not re.match(ALLOWED_COLUMN_PATTERN, col_name):
+            raise ValueError(f"Invalid column name: {col_name}")
+        if not re.match(r'^[A-Z]+$', col_type):
+            raise ValueError(f"Invalid column type: {col_type}")
     existing = {row[1] for row in db.execute(f"PRAGMA table_info({table})").fetchall()}
     for col_name, col_type in columns:
         if col_name not in existing:
