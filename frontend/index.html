@@ -51,6 +51,11 @@
             </span>
             <span class="w-2 h-2 rounded-full" :class="scanning ? 'bg-yellow-400 animate-pulse' : 'bg-emerald-400'"></span>
             <span class="text-xs text-gray-500">{{ scanning ? 'Scanning...' : 'Idle' }}</span>
+            <span v-if="userEmail" class="text-xs text-gray-400 border-l border-gray-700 pl-3 ml-2">{{ userEmail }}</span>
+            <a v-if="userEmail" href="/auth/logout"
+               class="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+                Logout
+            </a>
         </div>
     </nav>
 
@@ -430,6 +435,8 @@ createApp({
         const regime = ref('');
         let equityChart = null;
 
+        const userEmail = ref(null);
+
         const buyForm = reactive({
             symbol: '', price: null, stop_price: null,
             target1_price: null, target2_price: null, shares: null,
@@ -607,7 +614,20 @@ createApp({
             fetchAll();
         }
 
+        async function fetchUser() {
+            try {
+                const res = await fetch('/auth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    userEmail.value = data.email;
+                }
+            } catch (e) {
+                // Not logged in or auth not configured
+            }
+        }
+
         onMounted(() => {
+            fetchUser();
             fetchAll();
             // Poll every 30s
             setInterval(() => {
@@ -618,7 +638,7 @@ createApp({
         return {
             tab, tabs, portfolio, positions, journal, scanResults, stats, equityCurve,
             settings, scanning, autoTrade, lastScanResult, toast, buyForm, statCards,
-            notifications, regime,
+            notifications, regime, userEmail,
             fmt, manualBuy, closePosition, runScan, toggleAutoTrade, saveSetting, resetPortfolio,
         };
     }

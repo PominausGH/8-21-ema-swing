@@ -8,6 +8,7 @@ services:
     volumes:
     - ./data:/app/data
     environment:
+<<<<<<< Updated upstream
     - TZ=Australia/Sydney
     cap_drop:
     - ALL
@@ -24,3 +25,13 @@ services:
     - FOWNER
     - SETGID
     - SETUID
+=======
+      - TZ=Australia/Sydney
+      # Google OAuth (required for authentication)
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - ALLOWED_EMAILS=${ALLOWED_EMAILS}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      # Restrict CORS origins (comma-separated)
+      # - CORS_ORIGINS=https://paper.daintytrading.com
+>>>>>>> Stashed changes
