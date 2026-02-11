@@ -8,24 +8,6 @@ services:
     volumes:
     - ./data:/app/data
     environment:
-<<<<<<< Updated upstream
-    - TZ=Australia/Sydney
-    cap_drop:
-    - ALL
-    security_opt:
-    - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          pids: 200
-    cap_add:
-    - CHOWN
-    - DAC_OVERRIDE
-    - FOWNER
-    - SETGID
-    - SETUID
-=======
       - TZ=Australia/Sydney
       # Google OAuth (required for authentication)
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
@@ -34,4 +16,18 @@ services:
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       # Restrict CORS origins (comma-separated)
       # - CORS_ORIGINS=https://paper.daintytrading.com
->>>>>>> Stashed changes
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          pids: 200
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
